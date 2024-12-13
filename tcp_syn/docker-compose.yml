@@ -1,0 +1,26 @@
+include:
+  - ../base.yml
+
+services:
+  receiver:
+    tty: true
+    command: sh -c "./syn-daemon -i receiver0 -s 10.99.99.9 -f ./out"
+    cap_add:
+      - NET_ADMIN
+    stop_grace_period: 1s
+    network_mode: service:receiver_base
+    build:
+      dockerfile_inline: |
+        FROM gcc:12.4
+        RUN apt update && apt install -y libnet1-dev libpcap-dev
+        RUN git clone https://github.com/defensahacker/syn-file.git
+        WORKDIR syn-file
+        RUN sed -i '105s/^.*$/handle = pcap_open_live(devname, 65536, 1, 1000, errbuf);/' syn-daemon.c
+        RUN make
+
+  sender:
+    extends: receiver
+    network_mode: service:sender_base
+    depends_on:
+      - receiver
+    command: sh -c "./syn-file -i sender0 -d 10.88.88.8 -f /etc/os-release -p 8080 -P 8081 -m 00:99:99:99:99:10"

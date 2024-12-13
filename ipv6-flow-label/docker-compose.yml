@@ -6,6 +6,10 @@ services:
     command: python receive.py ./out
     network_mode: service:receiver_base
     stop_grace_period: 1s
+    depends_on:
+      firewall:
+        condition: service_started
+        required: false
     build:
       dockerfile_inline: |
         FROM python:3.7

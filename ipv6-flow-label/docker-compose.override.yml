@@ -1,0 +1,4 @@
+configs:
+  firewall:
+    content: |
+      ip6tables -P FORWARD DROP

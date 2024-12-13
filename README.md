@@ -28,6 +28,12 @@ https://github.com/christophetd/IPv6teal
 
 This tool transfers contents of a file inside the ["Flow label" field of an IPv6 packet](https://www.rfc-editor.org/rfc/rfc6437).
 
+## TCP Sequence Numbers
+
+https://github.com/defensahacker/syn-file
+
+This tool transmits a file using the sequence number field inside a TCP packet.
+
 ## Time between ICMP packets
 
 https://github.com/anfractuosity/timeshifter

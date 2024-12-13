@@ -1,22 +1,8 @@
 networks:
   sender-net:
-    enable_ipv6: true
-    ipam:
-      config:
-        - subnet: 10.99.99.0/24
-        - subnet: 9999::0/64
-    driver_opts:
-      com.docker.network.bridge.name: sender-net
-      com.docker.network.container_iface_prefix: sender
+    external: true
   receiver-net:
-    enable_ipv6: true
-    ipam:
-      config:
-        - subnet: 10.88.88.0/24
-        - subnet: 8888::0/64
-    driver_opts:
-      com.docker.network.bridge.name: receiver-net
-      com.docker.network.container_iface_prefix: receiver
+    external: true
 
 services:
   router:
@@ -26,14 +12,17 @@ services:
       sender-net:
         ipv4_address: 10.99.99.100
         ipv6_address: 9999::100
+        mac_address: 00:99:99:99:99:10
       receiver-net:
         ipv4_address: 10.88.88.100
         ipv6_address: 8888::100
+        mac_address: 00:88:88:88:88:10
     cap_add:
       - NET_ADMIN
     sysctls:
       - net.ipv6.conf.all.forwarding=1
     command: sh -c "sleep infinity"
+    image: router
     build:
       dockerfile_inline: |
         FROM debian:bookworm
@@ -48,6 +37,7 @@ services:
       receiver-net:
         ipv4_address: 10.88.88.8
         ipv6_address: 8888::8
+        mac_address: 00:88:88:88:88:88
     stop_grace_period: 1s
     command: sh -c "ip r r default via 10.88.88.100 && ip -6 r r default via 8888::100 && sleep infinity"
     build:
@@ -64,3 +54,19 @@ services:
       sender-net:
         ipv4_address: 10.99.99.9
         ipv6_address: 9999::9
+        mac_address: 00:99:99:99:99:99
+
+  firewall:
+    profiles: [firewall]
+    network_mode: service:router
+    image: router
+    cap_add:
+      - NET_ADMIN
+    configs:
+      - source: firewall
+        target: ./firewall.sh
+    command: sh firewall.sh
+
+configs:
+  firewall:
+    content: ""
